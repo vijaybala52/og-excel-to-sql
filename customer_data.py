@@ -6,14 +6,14 @@ df = pd.read_excel("customer_table.xlsx", sheet_name="Master")
 
 # Clean column names
 df.columns = (
-    df.columns.astype(str)
-    .str.strip()
-    .str.lower()
-    .str.replace(r"\s+", "_", regex=True)
-    .str.replace("/", "")
+    df.columns.astype(str) # convert to str 
+    .str.strip() # remove leading/trailing whitespace
+    .str.lower() # convert to lowercase
+    .str.replace(r"\s+", "_", regex=True) # replace  spaces with underscores it considers multiple spaces as one
+    .str.replace("/", "") # remove forward slashes
 )
 
-print("Columns:", df.columns.tolist())  # debug
+print("Columns:", df.columns.tolist())  # debug: print cleaned column names
 
 
 df = df.rename(columns={
@@ -101,7 +101,7 @@ for _, row in companies.iterrows():
     conn.commit()
 
     key = (row['name'], row['zone'], row['area'], row['route'], row['cluster'])
-    company_map[key] = cursor.lastrowid
+    company_map[key] = cursor.lastrowid # Store company_id for later use in machines and contacts
 
 
 # 6 Insert Machines

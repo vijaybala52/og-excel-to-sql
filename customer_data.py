@@ -2,7 +2,7 @@ import pandas as pd
 import mysql.connector
 
 
-df = pd.read_excel("customer_table.xlsx", sheet_name="Master")
+df = pd.read_excel("all_data.xlsx", sheet_name="Master")
 
 # Clean column names
 df.columns = (
@@ -12,6 +12,8 @@ df.columns = (
     .str.replace(r"\s+", "_", regex=True) # replace  spaces with underscores it considers multiple spaces as one
     .str.replace("/", "") # remove forward slashes
 )
+
+df = df.dropna(how='all')
 
 print("Columns:", df.columns.tolist())  # debug: print cleaned column names
 
@@ -66,18 +68,27 @@ conn = mysql.connector.connect(
     host="localhost",
     user="root",
     password="root",
-    database="call_entry_testing"
+    database="call_entryv7"
 )
 cursor = conn.cursor()
 
 
 # 5 Insert Companies
 
+# Ensure required company key fields are present and non-empty
+# Drop rows with missing company name to avoid NOT NULL constraint failure.
+df['name'] = df['name'].astype(str).str.strip().replace({'nan': None})
+
 companies = df[[
     'name','address1','address2','address3','country','city','state','pin',
     'route','zone','area','cluster','gstin','security',
     'weekly_off_start','weekly_off_end'
-]].drop_duplicates(subset=['name','zone','area','route','cluster'])
+]].dropna(subset=['name'])
+
+if companies['name'].isnull().any():
+    print("Skipping company rows with empty name:", companies[companies['name'].isnull()])
+
+companies = companies.drop_duplicates(subset=['name','zone','area','route','cluster'])
 
 company_map = {}
 
@@ -117,6 +128,9 @@ for _, row in machines.iterrows():
 
     key = (row['name'], row['zone'], row['area'], row['route'], row['cluster'])
     c_id = company_map.get(key)
+    if c_id is None:
+        print("Missing company key for machine:", key, "mc_no", row['mc_no'])
+        continue    # or raise error
 
     cursor.execute("""
         INSERT INTO machines (

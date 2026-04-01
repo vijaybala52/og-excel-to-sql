@@ -1,12 +1,12 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-df_temp = pd.read_excel('Distpy.xlsx', sheet_name='CHT', nrows=3)
+df_temp = pd.read_excel('Distpy.xlsx', sheet_name='Dist', nrows=3)
 print("First 3 rows of Excel (to understand structure):")
 print(df_temp)
 
 
-df = pd.read_excel('Distpy.xlsx', sheet_name='CHT', header=0, index_col=0)
+df = pd.read_excel('Distpy.xlsx', sheet_name='CH', header=0, index_col=0)
 
 df.columns = df.columns.astype(str)
 # Convert index to string to preserve location names  
@@ -40,10 +40,10 @@ print(f"\nMatrix shape: {df.shape} (rows x columns)")
 
 
 df_long = df.stack().reset_index()
-df_long.columns = ['from_location', 'to_location', 'Time_mins']
+df_long.columns = ['from_location', 'to_location', 'distance']
 
 
-df_long = df_long[df_long['Time_mins'] > 0]
+df_long = df_long[df_long['distance'] > 0]
 
 print("\n" + "="*50)
 print("Table format (long) - Ready for Database:")
@@ -53,9 +53,9 @@ print(f"\nTotal rows: {len(df_long)}")
 print(f"Columns: {df_long.columns.tolist()}")
 
 # 3. Connect & Upload to MySQL
-engine = create_engine('mysql+mysqlconnector://root:root@localhost/call_entryv7')
+engine = create_engine('mysql+mysqlconnector://root:root@localhost/testing')
 
 # Create table if needed
-df_long.to_sql('distance_time', engine, if_exists='append', index=False)
+df_long.to_sql('clone_distance', engine, if_exists='append', index=False)
 
-print(" Uploaded to MySQL 'distance_time' table")
+print(" Uploaded to MySQL 'clone_distance' table")
